@@ -1,26 +1,27 @@
-from Conf import *
+from ini import *
 
 #获取access token
-def gettoken(app_key,app_secret):
+def get_token(app_key,app_secret):
     req=dingtalk.api.OapiGettokenRequest("https://oapi.dingtalk.com/gettoken")
     req.appkey= app_key
     req.appsecret= app_secret
     try:
         access_token= req.getResponse()['access_token']
         return access_token
-
     except Exception as e:
         return traceback.format_exc()
 
 #查询审批流信息
-def getinfo(access_token,process_id):
+def get_processinfo(access_token,process_id):
     req=dingtalk.api.OapiProcessinstanceGetRequest("https://oapi.dingtalk.com/topapi/processinstance/get")
     req.process_instance_id=process_id
     try:
         resp= req.getResponse(access_token)
-        #回传操作类型以及用户信息
-        return { 'flag' : resp["process_instance"]["form_component_values"][0]["value"] ,
+        #回传操作类型以及用户信息;user_id,dept_id用于推送消息
+        return { 'flag' :       resp["process_instance"]["form_component_values"][0]["value"] ,
                  'ad_account' : resp["process_instance"]["form_component_values"][1]["value"] ,
+                 'dept' :       resp["process_instance"]["form_component_values"][2]["value"] ,
+                 'title' :      resp["process_instance"]["form_component_values"][3]["value"] ,
                  'user_id' : resp["process_instance"]["originator_userid"] , 
                  'dept_id' : resp["process_instance"]["originator_dept_id"]    
                }
@@ -42,7 +43,7 @@ def sendnotification(access_token,user_id,dept_id,result):
     }
     try:
         resp= req.getResponse(access_token)
-        print(resp)
+        #print(resp)
     except Exception as e:
         return traceback.format_exc()
 

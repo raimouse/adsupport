@@ -14,7 +14,7 @@ def homepage():
 
 @app.route('/callback',methods=['POST'])
 def callback():
-    #获取解密参数及密文
+    #获取签名,解密参数及密文
     signature = request.args.get('signature')
     msg_signature = request.args.get('msg_signature')
     timestamp = request.args.get('timestamp')
@@ -26,7 +26,8 @@ def callback():
     plaintext =dingCrypto.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
     #把json格式的明文变换为dict
     msg = json.loads(plaintext)
-  
+    print(json.dumps(msg,sort_keys=True,indent=4,separators=(',',':')))  
+
     #过滤特定的审批流且状态为通过审批
     if ( msg['processCode'] == process_code ) and ( msg["type"] == "finish" ):
        #当msg["type"] == "finish"时才有result字段
@@ -34,21 +35,21 @@ def callback():
        if msg["result"] == 'agree':
           process_id = msg['processInstanceId']
           #print(process_id)
-          access_token = gettoken(app_key,app_secret)
+          access_token = get_token(app_key,app_secret)
           #获取审批实例的发起人信息及待操作的ad账号
-          info = getinfo(access_token,process_id)
+          info = get_processinfo(access_token,process_id)
+
           if info['flag'] == '解锁账号' :
              result = user_unlock(info['ad_account'])
-             #print(result)
-             sendnotification(access_token,info['user_id'],info['dept_id'],result)
           elif info['flag'] == '重置密码':
              result = user_resetpw(info['ad_account'])
-             #print(result)
-             sendnotification(access_token,info['user_id'],info['dept_id'],result)
+          elif info['flag'] == '申请账号':
+             result = user_create(info['ad_account'],info['dept'],'HQ',info['title'])
+          #print(result)
+          sendnotification(access_token,info['user_id'],info['dept_id'],result)
    
     #响应事件,通知钉钉已收到推送
     return dingCrypto.getEncryptedMap()
-
 
 if __name__ == '__main__':
    app.run()

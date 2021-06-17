@@ -1,6 +1,5 @@
 # coding=utf-8
 #pip install pywinrm netmiko pycryptodome flask
-#基础包
 import traceback
 import dingtalk.api
 import winrm

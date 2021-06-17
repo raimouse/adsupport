@@ -1,4 +1,5 @@
-from Conf import *
+#钉钉加解密库
+from ini import *
 
 class DingCallbackCrypto:
     def __init__(self,aes_key,app_key,aes_token):
