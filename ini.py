@@ -18,9 +18,9 @@ from Crypto.Util.Padding import pad,unpad
 
 
 #应用凭证
-agent_id=1068346698
-app_key="dinga13xhv6expzbcj1a"
-app_secret="jUtIY6nLUJEQp5259ksVohlluko9TcXdGgDCcTFffgcN97Ra03K0LSAb3hryO3Ru"
+agent_id="1221259652"
+app_key="dingc9czzb1ilmkf1nzu"
+app_secret="PJYtSGS4DLHLY-z3S5CUpopILSvN1zuR3Ltka3BAMSI_gdEIxatirm_NHBMBSvC4"
 
 #所监听的审批流代码
 process_code="PROC-8BE46E7C-745A-44B5-9465-F9C9A7401724"
@@ -40,8 +40,8 @@ user_log_path = 'C:\\it\\user_modify.log'
 group_log_path = 'C:\\it\\group_modify.log'
 
 #回调加解密参数
-encode_key = 'FqBCgHeA3BEcW3HLW1RdEcQQxlvhrCTWuDXz5lcZ77m'
-aes_token = 'CeoYLc8tnHYkO7aulRF6sPv'
+encode_key = 'ml86JiiQSLu0gK2jX6wImIHCLyf60M4xfkUE9PjpDnh'
+aes_token = 'jtyzJaN6IrU7KiKwjiW34pSJ8'
 
 #base64解码得出用于加解密的aes_key
 aes_key = base64.b64decode(encode_key+'=')

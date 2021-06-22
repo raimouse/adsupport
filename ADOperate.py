@@ -1,3 +1,4 @@
+# coding=utf-8
 from ini import *
 
 #解锁账号

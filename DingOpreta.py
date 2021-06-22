@@ -1,3 +1,4 @@
+# coding=utf-8
 from ini import *
 
 #获取access token

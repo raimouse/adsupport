@@ -27,9 +27,10 @@ def callback():
     #把json格式的明文变换为dict
     msg = json.loads(plaintext)
     print(json.dumps(msg,sort_keys=True,indent=4,separators=(',',':')))  
-
+    if ( msg["EventType"] == "check_url" ) :
+        print("check_url")
     #过滤特定的审批流且状态为通过审批
-    if ( msg['processCode'] == process_code ) and ( msg["type"] == "finish" ):
+    elif ( msg['processCode'] == process_code ) and ( msg["type"] == "finish" ):
        #当msg["type"] == "finish"时才有result字段
        #仅当审批通过时才执行操作
        if msg["result"] == 'agree':
