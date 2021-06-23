@@ -32,11 +32,12 @@ class DingCallbackCrypto:
         #进行aes解密提取明文
         aesDecode = AES.new(self.aes_key, AES.MODE_CBC, iv)
         decodeRes = aesDecode.decrypt(content)
-        padtext = decodeRes[-1]
-        if padtext > 32:
+        #获取填充字节数
+        padnum = decodeRes[-1]
+        if padnum > 32:
             raise ValueError('Input is not padded or padding is corrupt')
         #去除填充字节
-        decodeRes = decodeRes[:-padtext]
+        decodeRes = decodeRes[:-padnum]
         #获取明文字符串长度
         length = struct.unpack('!i', decodeRes[16:20])[0]
         #校验尾部是否为对应的app_key
@@ -75,12 +76,14 @@ class DingCallbackCrypto:
 
 
 
-#if __name__=='__main__':
+if __name__=='__main__':
 
-#   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
-#   timestamp= "1624369776"
-#   nonce= "FhkLBXtgjiiZVMjp"
-#   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
-#   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
-#   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
-#   print(emsg)
+   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
+   timestamp= "1624369776"
+   nonce= "FhkLBXtgjiiZVMjp"
+   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
+   bs = DingCallbackCrypto(aes_key,app_key,aes_token)
+   emsg = "success"
+   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
+   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
+   print(emsg)

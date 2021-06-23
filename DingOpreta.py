@@ -4,8 +4,8 @@ from ini import *
 #获取access token
 def get_token(app_key,app_secret):
     req=dingtalk.api.OapiGettokenRequest("https://oapi.dingtalk.com/gettoken")
-    req.appkey= app_key
-    req.appsecret= app_secret
+    req.appkey    = app_key
+    req.appsecret = app_secret
     try:
         access_token= req.getResponse()['access_token']
         return access_token
@@ -19,12 +19,13 @@ def get_processinfo(access_token,process_id):
     try:
         resp= req.getResponse(access_token)
         #回传操作类型以及用户信息;user_id,dept_id用于推送消息
-        return { 'flag' :       resp["process_instance"]["form_component_values"][0]["value"] ,
-                 'ad_account' : resp["process_instance"]["form_component_values"][1]["value"] ,
-                 'dept' :       resp["process_instance"]["form_component_values"][2]["value"] ,
-                 'title' :      resp["process_instance"]["form_component_values"][3]["value"] ,
-                 'user_id' : resp["process_instance"]["originator_userid"] , 
-                 'dept_id' : resp["process_instance"]["originator_dept_id"]    
+        return { 
+        'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
+        'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
+        'dept'       : resp["process_instance"]["form_component_values"][5]["value"] ,
+        'title'      : resp["process_instance"]["form_component_values"][6]["value"] ,
+        'user_id'    : resp["process_instance"]["originator_userid"] , 
+        'dept_id'    : resp["process_instance"]["originator_dept_id"]    
                }
     except Exception as e:
         return traceback.format_exc()
@@ -32,15 +33,15 @@ def get_processinfo(access_token,process_id):
 #发送通知消息
 def sendnotification(access_token,userid_list,dept_id,result):
     req=dingtalk.api.OapiMessageCorpconversationAsyncsendV2Request("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2")
-    req.agent_id = agent_id
-    req.userid_list = userid_list
+    req.agent_id     = agent_id
+    req.userid_list  = userid_list
     req.dept_id_list = dept_id
     #只通知审批发起人
-    req.to_all_user="false"
+    req.to_all_user  = "false"
     #构建通知消息体
     req.msg={
-        "msgtype":"text",
-        "text":{ "content":result }
+        "msgtype" : "text",
+        "text"    : { "content":result }
     }
     try:
         resp= req.getResponse(access_token)

@@ -49,7 +49,7 @@ def user_create(account,dept,title):
     #将钉钉的dept转换为ad对应的dept
     dept_info = get_ou(dept)
     dept = dept_info["dept"]
-    office = dept_infoou["office"]
+    office = dept_info["office"]
     OU = dept_info["OU"]
     #构建powershell命令
     cmd = ' New-ADUser -Name {0} -SamAccountName {0} -DisplayName {0} \
@@ -62,7 +62,7 @@ def user_create(account,dept,title):
             -PasswordNeverExpires 1 -Enabled 1 ' \
             .format(account,account.split('.')[1],account.split('.')[0],dept,office,title,OU,passwd)
     optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    group_add__result = ""
+    group_add_result = ""
     
     #创建账号
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
@@ -145,40 +145,40 @@ def group_remove(account,group):
 #构建ou
 def get_ou(dept):
     #部门列表
-    #dept_it = ["IT","IT-Infrastructure","IT-ERP","IT-Digital"]
-    #dept_hr = ["HR"]
-    #dept_fa = ["FA"]
-    #dept_cm = ["CM","CM-Fresh","CM-Dry & Non Food"]
-    #dept_mk = ["MKCD","MKCD-MK（MM","MKCD-MK2","MKCD-MK3（电商）"]
-    #dept_md = ["MD","MD-BD"]
-    #dept_op = ["OP"]
-    #默认office为HQ
+    dept_it = ["IT","Infrastructure","ERP","Digital"]
+    dept_hr = ["HR"]
+    dept_fa = ["FA"]
+    dept_cm = ["CM","Fresh","Dry & Non Food"]
+    dept_mk = ["MKCD","MK（MM）","MK2","MK3（电商）"]
+    dept_md = ["MD","BD"]
+    dept_op = ["OP","KA"]
+    dept_ST01 = ["1001 花都迎宾店","CD","ALC","水产","冷冻冷藏","果蔬","肉类","收银部","收货","干货","配送","GA"]
+    #默认office为HQ,默认OU为IT
     office = "HQ"
-    if   "IT" in dept :
+    ou = "OU=IT,OU=HQ"
+
+    if  dept in dept_it :
         dept = "IT"
         ou = "OU=IT,OU=HQ"
-    elif "HR" in dept :
+    elif dept in dept_hr :
         dept = "HR"
         ou = "OU=HR,OU=HQ"
-    elif "FA" in dept :
+    elif dept in dept_fa :
         dept = "FA"
         ou = "OU=FA,OU=HQ"
-    elif "CM" in dept :
+    elif dept in dept_cm :
         dept = "CM"
         ou = "OU=CM,OU=HQ"
-    elif "MK" in dept :
+    elif dept in dept_mk :
         dept = "MKT"
         ou = "OU=MKT,OU=HQ"
-    elif "MD" in dept :
+    elif dept in dept_md :
         dept = "MD"
         ou = "OU=MD,OU=HQ"
-    elif "KA" in dept :
-        dept = "OPTN"
+    elif dept in dept_op :
+        dept = "OP"
         ou = "OU=OPTN,OU=HQ"
-    elif "OP" == dept :
-        dept = "OPTN"
-        ou = "OU=OPTN,OU=HQ"
-    elif "1001" in dept :
+    elif dept in dept_ST01 :
         dept = "ST01"
         ou = "OU=ST01"
         office = "ST01"
