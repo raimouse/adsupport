@@ -9,13 +9,13 @@ class DingCallbackCrypto:
         self.aes_token = aes_token
 
     #生成响应数据,默认为success
-    def getEncryptedMap(self):
-        encrypt = self.encrypt("success")
+    def getEncryptedMap(self,callback_text):
+        encrypt = self.encrypt(callback_text)
         timestamp = str(int(time.time()))
         nonce = self.generateRandomKey(16)
         sign = self.generateSignature(nonce, timestamp, self.aes_token,encrypt)
-        msg = {'msg_signature':sign,'encrypt':encrypt,'timestamp':timestamp,'nonce':nonce}
-        print(msg)
+        msg = {'msg_signature':sign,'encrypt':encrypt,'timeStamp':timestamp,'nonce':nonce}
+        #print(msg)
         return msg
 
     ##解密钉钉发送的数据
@@ -75,15 +75,12 @@ class DingCallbackCrypto:
 
 
 
-if __name__=='__main__':
+#if __name__=='__main__':
 
-  # dingCrypto = DingCallbackCrypto(aes_key,app_key,aes_token) 
-  # msg = dingCrypto.getEncryptedMap()
-  # print(msg)
-   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
-   timestamp= "1624369776"
-   nonce= "FhkLBXtgjiiZVMjp"
-   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
-   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
-   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
-   print(emsg)
+#   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
+#   timestamp= "1624369776"
+#   nonce= "FhkLBXtgjiiZVMjp"
+#   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
+#   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
+#   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
+#   print(emsg)

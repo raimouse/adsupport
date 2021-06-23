@@ -25,6 +25,8 @@ app_secret="PJYtSGS4DLHLY-z3S5CUpopILSvN1zuR3Ltka3BAMSI_gdEIxatirm_NHBMBSvC4"
 #所监听的审批流代码
 process_code="PROC-8BE46E7C-745A-44B5-9465-F9C9A7401724"
 
+#钉钉管理员user_id
+ding_admin_id = "012167171636058364"
 #AD账号初始密码
 passwd='mkgz18//'
 

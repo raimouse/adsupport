@@ -30,11 +30,11 @@ def get_processinfo(access_token,process_id):
         return traceback.format_exc()
 
 #发送通知消息
-def sendnotification(access_token,user_id,dept_id,result):
+def sendnotification(access_token,userid_list,dept_id,result):
     req=dingtalk.api.OapiMessageCorpconversationAsyncsendV2Request("https://oapi.dingtalk.com/topapi/message/corpconversation/asyncsend_v2")
-    req.agent_id=agent_id
-    req.userid_list=user_id
-    req.dept_id_list=dept_id
+    req.agent_id = agent_id
+    req.userid_list = userid_list
+    req.dept_id_list = dept_id
     #只通知审批发起人
     req.to_all_user="false"
     #构建通知消息体
