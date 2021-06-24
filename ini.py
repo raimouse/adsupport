@@ -22,9 +22,9 @@ agent_id="1221259652"
 app_key="dingc9czzb1ilmkf1nzu"
 app_secret="PJYtSGS4DLHLY-z3S5CUpopILSvN1zuR3Ltka3BAMSI_gdEIxatirm_NHBMBSvC4"
 
-#所监听的审批流代码
+#新用户申请审批流代码
 newuser_process_code="PROC-535A206D-8A71-47DE-BC62-61B0765CCFE6"
-#newuser_process_code="PROC-5638E76E-1057-4C7E-8A98-71EDCABF9966"
+#故障申报审批流代码
 infra_process_code="PROC-574DF04E-1D59-47D9-805E-AC3BBD870B1F"
 
 #钉钉管理员user_id
