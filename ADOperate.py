@@ -38,13 +38,14 @@ def user_resetpw(account):
     if user_check(account) == 1 :
         raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
-    cmd = 'Set-ADAccountPassword -Reset {0} -NewPassword (ConvertTo-SecureString -AsPlainText "{1}" -Force)' \
-         .format(account,passwd)
+    cmd = 'Set-ADAccountPassword -Reset {0} -NewPassword (ConvertTo-SecureString -AsPlainText "{1}" -Force) ; \
+            Unlock-ADAccount {0} '.format(account,passwd)
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
     r = s.run_ps(cmd)
 
     if ( r.status_code == 0 ) :
-        log = "{0}\n{1} 密码已重置为:{2}".format(optime,account,passwd) 
+
+        log = "{0}\n{1} 密码已重置为{2}".format(optime,account,passwd) 
     else :
         result = r.std_err.decode().splitlines()[0]
         log = "{0}\n{1} 重置密码失败\n{2}".format(optime,account,result)
@@ -63,13 +64,10 @@ def user_create(account,dept,title):
       optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
       #获取部门信息
       dept_info = get_ou(dept)
-      print(dept_info)
       dept = dept_info["dept"]
       office = dept_info["office"]
       OU = dept_info["OU"]
       #门店员工不会创建AD账号
-      print(account)
-      print(dept)
       if dept == "ST01" :
           raise ValueError("门店员工不创建个人邮箱账号\n新建门店邮箱账号请联系IT处理")
       #检查账号格式是否正确
@@ -80,8 +78,8 @@ def user_create(account,dept,title):
           raise ValueError("账号格式有误,请检查输入")
       #检查账号是否已经存在
       if user_check(account) == 0 :
-          raise ValueError('已有同名账号,请联系IT处理')
-      #构建powershell命令,此处同时设定了密码永不过期并激活用户
+          raise ValueError("邮箱账号已存在,请联系IT处理")
+      #构建powershell命令,此处同时设定了密码永不过期
       cmd = ' New-ADUser -Name {0} -SamAccountName {0} -DisplayName {0} \
               -EmailAddress "{0}@makrochina.com" -UserPrincipalName "{0}@makrochina.com" \
               -Surname {1} -GivenName {2} \
