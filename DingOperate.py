@@ -18,16 +18,32 @@ def get_processinfo(access_token,process_id):
     req.process_instance_id=process_id
     try:
         resp= req.getResponse(access_token)
+        if resp["process_instance"]["form_component_values"][7]["value"] == "否" :
+            raise ValueError("无需创建邮箱账户")
         #回传操作类型以及用户信息;user_id用于推送消息
         return { 
-        'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
+        'user_id'    : resp["process_instance"]["originator_userid"] ,
+        'flag'       : resp["process_instance"]["form_component_values"][0]["value"],
         'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
         'dept'       : resp["process_instance"]["form_component_values"][3]["value"] ,
         'title'      : resp["process_instance"]["form_component_values"][4]["value"] ,
-        'user_id'    : resp["process_instance"]["originator_userid"]   
                }
-    except Exception as e:
-        print(e)
+    #发生value异常说明此单无需创建账户
+    except ValueError as valerror:
+        print(valerror)
+        return {
+                'flag' : None ,
+                'user_id'    : resp["process_instance"]["originator_userid"] 
+                }
+    #发生indexerror说明无此下标,即为故障申报单
+    except IndexError as indexerror:
+        print(indexerror)
+        return {
+                'user_id'    : resp["process_instance"]["originator_userid"] ,
+                'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
+                'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
+                'dept'       : resp["process_instance"]["form_component_values"][3]["value"] , 
+                }
 
 #发送通知消息
 def sendnotification(access_token,userid_list,result):
