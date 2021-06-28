@@ -49,8 +49,7 @@ def callback():
             elif info['flag'] == '重置密码':
                 result = user_resetpw(info['ad_account'])
             elif info['flag'] == '微信打不开':
-                group_addmember(info['ad_account'],"Domain Admins")
-                result = "{0}\n处理成功\n需30分钟内注销或重启电脑\n超时未执行会导致处理失效".format(optime)
+                result = group_addmember(info['ad_account'],"Domain Admins")
             elif info['flag'] == "新员工账号申请" :
                 result = user_create(info['ad_account'],info['dept'],info['title'])
                 #print(result)
