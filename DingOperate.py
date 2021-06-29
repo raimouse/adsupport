@@ -64,6 +64,21 @@ def sendnotification(access_token,userid_list,result):
         #return traceback.format_exc()
         print(e)
 
+#添加审批评论
+def comment_process(access_token,process_id,result):
+    req=dingtalk.api.OapiProcessInstanceCommentAddRequest("https://oapi.dingtalk.com/topapi/process/instance/comment/add")
+
+    req.request={
+            "comment_userid" : ding_admin_id ,
+            "process_instance_id" : process_id ,
+            "text": result ,
+            }
+    try:
+        resp= req.getResponse(access_token)
+        #print(resp)
+    except Exception as e:
+        print(traceback.format_exc())
+
 
 #if __name__=='__main__':
 #     access_token=get_token(app_key,app_secret)

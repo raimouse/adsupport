@@ -6,7 +6,7 @@ def user_unlock(account):
   try:
     optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
     #先检查用户是否存在(无实际性能提升)
-    if user_check(account) == "True" :
+    if user_check(account) == "False" :
         raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
     cmd = ' Unlock-ADAccount {0} '.format(account)
@@ -29,7 +29,7 @@ def user_unlock(account):
   except Exception as e:
     #print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #重置密码
 def user_resetpw(account):
@@ -57,7 +57,7 @@ def user_resetpw(account):
   except Exception as e:
     #print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #创建账户
 def user_create(account,dept,title):
@@ -112,7 +112,7 @@ def user_create(account,dept,title):
   except Exception as e:
     print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #删除用户
 def user_remove(account):
@@ -124,7 +124,7 @@ def user_remove(account):
     r = s.run_ps(cmd)
 
     if ( r.status_code == 0 ):
-        log = "{0}\n{1} 用户已删除".format(optime,account)
+        log = "{0}\n{1} 用户删除成功".format(optime,account)
     else :
         result=r.std_err.decode().splitlines()[0]
         log = "{0}\n{1} 用户删除失败\n{2}".format(optime,account,result)
@@ -135,7 +135,7 @@ def user_remove(account):
   except Exception as e:
     #print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #检查用户是否存在
 def user_check(account):
@@ -155,7 +155,7 @@ def user_check(account):
     except Exception as e:
         #print(traceback.format_exc())
         #添加optime,避免内容重复导致无法推送
-        return "{0}\n处理失败:{1}".format(optime,str(e))
+        return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #添加用户组
 def group_addmember(account,group):
@@ -175,15 +175,12 @@ def group_addmember(account,group):
         log = "{0}\n{1} 无法添加到用户组 {2}\n{3}".format(optime,account,group,result)
     cmd = "'{0}' | Out-File -Append {1}".format(log.replace("\n"," "),group_log_path)
     s.run_ps(cmd)
-    if group == "Domain Admins" :
-        return "{0}\n处理成功\n需30分钟内注销或重启电脑\n超时未执行会导致处理失效".format(optime)
-    else :
-        return log
+    return log
 
   except Exception as e:
     #print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
 #移除用户组
 def group_removemember(account,group):
@@ -204,10 +201,55 @@ def group_removemember(account,group):
     return log
 
   except Exception as e:
-    #print(traceback.format_exc())
+    print(traceback.format_exc())
     #添加optime,避免内容重复导致无法推送
-    return "{0}\n处理失败:{1}".format(optime,str(e))
+    return "{0}\n内部系统错误:{1}".format(optime,str(e))
 
+#添加Admins组
+def group_addAdmins(account):
+    optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    if user_check(account) == "False" :
+        raise ValueError('未找到该账号,请检查输入')
+    #生成powershell命令以及获取当前时间
+    cmd = ' Add-ADGroupMember -Identity "Domain Admins" -Members {0} ; \
+            Set-ADUser -Identity {0} -Replace @{{primarygroupid=512}} '.format(account)
+    #print(cmd)
+    try :
+        s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
+        r = s.run_ps(cmd)
+        if ( r.status_code == 0 ):
+            log = "{0}\n{1}权限处理成功\n需30分钟内注销或重启电脑\n超时未执行会导致处理失效".format(optime,account)
+        else :
+            result=r.std_err.decode().splitlines()[0]
+            log = "{0}\n{1}权限处理失败,请联系IT处理\n{2}".format(optime,account,result)
+        cmd = "'{0}' | Out-File -Append {1}".format(log.replace("\n"," "),group_log_path)
+        s.run_ps(cmd)
+        return log
+    except Exception as e:
+        print(traceback.format_exc())
+        return "{0}\n内部系统错误:{1}".format(optime,str(e))
+
+#移除Admins组
+def group_removeAdmins(account):
+    optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    if user_check(account) == "False" :
+        raise ValueError('未找到该账号,请检查输入')
+    cmd = 'Set-ADUser -Identity {0} -Replace @{{primarygroupid=513}} ; \
+           Remove-ADGroupMember -Identity "Domain Admins" -Members {0} -Confirm:0 '.format(account)
+    try :
+        s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
+        r = s.run_ps(cmd)
+        if ( r.status_code == 0 ):
+            log = "{0}\n{1} 移除Admins组成功".format(optime,account)
+        else :
+            result=r.std_err.decode().splitlines()[0]
+            log = "{0}\n{1} 移除Admins组失败\n{3}".format(optime,account,result)
+        cmd = "'{0}' | Out-File -Append {1}".format(log.replace("\n"," "),group_log_path)
+        s.run_ps(cmd)
+        return log
+    except Exception as e:
+        print(traceback.format_exc())
+        return "{0}\n内部系统错误:{1}".format(optime,str(e))
 #构建ou
 def get_ou(dept):
     #部门列表
