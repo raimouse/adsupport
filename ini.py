@@ -4,6 +4,7 @@ import traceback
 import dingtalk.api
 import winrm
 import time
+import datetime
 #加解密相关包
 import json
 import uuid
@@ -49,3 +50,6 @@ aes_token = 'jtyzJaN6IrU7KiKwjiW34pSJ8'
 
 #base64解码得出用于加解密的aes_key
 aes_key = base64.b64decode(encode_key+'=')
+
+#计划任务传参用全局变量
+job_result = ''
