@@ -16,6 +16,7 @@ class DingCallbackCrypto:
         sign = self.generateSignature(nonce, timestamp, self.aes_token,encrypt)
         msg = {'msg_signature':sign,'encrypt':encrypt,'timeStamp':timestamp,'nonce':nonce}
         #print(msg)
+        #print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
         return msg
 
     ##解密钉钉发送的数据

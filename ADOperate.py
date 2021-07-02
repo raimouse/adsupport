@@ -118,6 +118,8 @@ def user_create(account,dept,title):
 def user_remove(account):
   try:
     optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    if user_check(account) == "False" :
+        raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
     cmd = 'Remove-ADUser {0} -Confirm:0'.format(account)
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
@@ -221,10 +223,10 @@ def group_addAdmins(account):
         r = s.run_ps(cmd)
         if ( r.status_code == 0 ):
             error_code = 0
-            log = "{0}\n{1}权限处理成功\n需30分钟内注销或重启电脑\n超时未执行会导致处理失效".format(optime,account)
+            log = "{0}\n{1} 权限处理成功\n需30分钟内注销或重启电脑\n超时未重启将导致处理失效".format(optime,account)
         else :
             result=r.std_err.decode().splitlines()[0]
-            log = "{0}\n{1}权限处理失败,请联系IT处理\n{2}".format(optime,account,result)
+            log = "{0}\n{1} 权限处理失败,请联系IT处理\n{2}".format(optime,account,result)
         cmd = "'{0}' | Out-File -Append {1}".format(log.replace("\n"," "),group_log_path)
         s.run_ps(cmd)
         return {"result" : log,

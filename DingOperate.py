@@ -19,7 +19,7 @@ def get_processinfo(access_token,process_id):
     try:
         resp= req.getResponse(access_token)
         if resp["process_instance"]["form_component_values"][7]["value"] == "否" :
-            raise ValueError("无需创建邮箱账户")
+            raise ValueError("此审批无需创建账户")
         #回传操作类型以及用户信息;user_id用于推送消息
         return { 
         'user_id'    : resp["process_instance"]["originator_userid"] ,
@@ -30,20 +30,23 @@ def get_processinfo(access_token,process_id):
                }
     #发生value异常说明此单无需创建账户
     except ValueError as valerror:
-        print(valerror)
+        print("此审批无需创建账户")
         return {
                 'flag' : None ,
-                'user_id'    : resp["process_instance"]["originator_userid"] 
+                'user_id'    : resp["process_instance"]["originator_userid"],
+                'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
                 }
     #发生indexerror说明无此下标,即为故障申报单
     except IndexError as indexerror:
-        print(indexerror)
+        print("此审批为故障申报单")
         return {
                 'user_id'    : resp["process_instance"]["originator_userid"] ,
                 'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
                 'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
                 'dept'       : resp["process_instance"]["form_component_values"][3]["value"] , 
                 }
+    except Exception as e:
+        print(traceback.format_exc())
 
 #发送通知消息
 def sendnotification(access_token,userid_list,result):
@@ -59,10 +62,9 @@ def sendnotification(access_token,userid_list,result):
     }
     try:
         resp= req.getResponse(access_token)
-        #print(resp)
+        print(resp)
     except Exception as e:
-        #return traceback.format_exc()
-        print(e)
+        return traceback.format_exc()
 
 #添加审批评论
 def comment_process(access_token,process_id,result):
@@ -75,7 +77,7 @@ def comment_process(access_token,process_id,result):
             }
     try:
         resp= req.getResponse(access_token)
-        #print(resp)
+        print(resp)
     except Exception as e:
         print(traceback.format_exc())
 

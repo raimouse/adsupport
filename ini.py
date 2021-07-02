@@ -1,5 +1,5 @@
 # coding=utf-8
-#pip install pywinrm netmiko pycryptodome flask
+#pip install pywinrm netmiko pycryptodome flask flask_apscheduler flask_executor
 import traceback
 import dingtalk.api
 import winrm
