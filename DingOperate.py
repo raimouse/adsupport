@@ -10,7 +10,7 @@ def get_token(app_key,app_secret):
         access_token= req.getResponse()['access_token']
         return access_token
     except Exception as e:
-        print(e)
+        adsupport_logger.error(str(e))
 
 #查询审批流信息
 def get_processinfo(access_token,process_id):
@@ -30,7 +30,7 @@ def get_processinfo(access_token,process_id):
                }
     #发生value异常说明此单无需创建账户
     except ValueError as valerror:
-        print("此审批无需创建账户")
+        adsupport_logger.info(str(valerror)+":"+process_id)
         return {
                 'flag' : None ,
                 'user_id'    : resp["process_instance"]["originator_userid"],
@@ -38,7 +38,7 @@ def get_processinfo(access_token,process_id):
                 }
     #发生indexerror说明无此下标,即为故障申报单
     except IndexError as indexerror:
-        print("此审批为故障申报单")
+        adsupport_logger.info("此审批为故障申报单:"+process_id)
         return {
                 'user_id'    : resp["process_instance"]["originator_userid"] ,
                 'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
@@ -46,7 +46,7 @@ def get_processinfo(access_token,process_id):
                 'dept'       : resp["process_instance"]["form_component_values"][3]["value"] , 
                 }
     except Exception as e:
-        print(traceback.format_exc())
+        adsupport_logger.error(str(e))
 
 #发送通知消息
 def sendnotification(access_token,userid_list,result):
@@ -62,9 +62,9 @@ def sendnotification(access_token,userid_list,result):
     }
     try:
         resp= req.getResponse(access_token)
-        print(resp)
+        adsupport_logger.info(resp)
     except Exception as e:
-        return traceback.format_exc()
+        adsupport_logger.error(str(e))
 
 #添加审批评论
 def comment_process(access_token,process_id,result):
@@ -77,10 +77,9 @@ def comment_process(access_token,process_id,result):
             }
     try:
         resp= req.getResponse(access_token)
-        print(resp)
+        adsupport_logger.info(resp)
     except Exception as e:
-        print(traceback.format_exc())
-
+        adsupport_logger.error(str(e))
 
 #if __name__=='__main__':
 #     access_token=get_token(app_key,app_secret)

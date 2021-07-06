@@ -15,8 +15,7 @@ class DingCallbackCrypto:
         nonce = self.generateRandomKey(16)
         sign = self.generateSignature(nonce, timestamp, self.aes_token,encrypt)
         msg = {'msg_signature':sign,'encrypt':encrypt,'timeStamp':timestamp,'nonce':nonce}
-        #print(msg)
-        #print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
+        adsupport_logger.debug(msg)
         return msg
 
     ##解密钉钉发送的数据
@@ -26,6 +25,7 @@ class DingCallbackCrypto:
         #print(sign, msg_signature)
         if msg_signature != sign:
             raise ValueError('signature check error')
+            adsupport_logger.debug('signature check error')
         #首先对密文进行base64解码             
         content = base64.decodebytes(encrypt.encode('UTF-8'))  
         #初始向量为aes_key取前16位
@@ -37,6 +37,7 @@ class DingCallbackCrypto:
         padnum = decodeRes[-1]
         if padnum > 32:
             raise ValueError('Input is not padded or padding is corrupt')
+            adsupport_logger.debug('Input is not padded or padding is corrupt')
         #去除填充字节
         decodeRes = decodeRes[:-padnum]
         #获取明文字符串长度
@@ -44,6 +45,7 @@ class DingCallbackCrypto:
         #校验尾部是否为对应的app_key
         if decodeRes[(20+length):].decode() != self.app_key:
             raise ValueError('corpId 校验错误')
+            adsupport_logger.debug('corpId 校验错误')
         #提取明文消息体
         return decodeRes[20:(20+length)].decode()
     
@@ -77,14 +79,14 @@ class DingCallbackCrypto:
 
 
 
-if __name__=='__main__':
-
-   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
-   timestamp= "1624369776"
-   nonce= "FhkLBXtgjiiZVMjp"
-   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
-   bs = DingCallbackCrypto(aes_key,app_key,aes_token)
-   emsg = "success"
-   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
-   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
-   print(emsg)
+#if __name__=='__main__':
+#
+#   msg_signature= "df1be58854e7a56f5728cdfce3f18dfffc5bec33"
+#   timestamp= "1624369776"
+#   nonce= "FhkLBXtgjiiZVMjp"
+#   encrypt= "24TFccTtqV/8NwiXxLbYbO/wPtvpi7KoPJRxKNtEtm9/E+y/Qk/EnKOiOjd8NX87\n"
+#   bs = DingCallbackCrypto(aes_key,app_key,aes_token)
+#   emsg = "success"
+#   ts = DingCallbackCrypto(aes_key,app_key,aes_token)
+#   emsg = ts.getDecryptMsg(msg_signature,timestamp,nonce,encrypt)
+#   print(emsg)

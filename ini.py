@@ -1,8 +1,10 @@
 # coding=utf-8
-#pip install pywinrm netmiko pycryptodome flask flask_apscheduler flask_executor
-import traceback
+#pip install pywinrm pycryptodome flask flask_apscheduler flask_executor
 import dingtalk.api
 import winrm
+import logging
+import logging.handlers
+import traceback
 import time
 import datetime
 #加解密相关包
@@ -17,7 +19,6 @@ from random import choice
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad,unpad
 
-
 #应用凭证
 agent_id="1221259652"
 app_key="dingc9czzb1ilmkf1nzu"
@@ -30,6 +31,7 @@ infra_process_code="PROC-574DF04E-1D59-47D9-805E-AC3BBD870B1F"
 
 #钉钉管理员user_id
 ding_admin_id = "012167171636058364"
+
 #AD账号初始密码
 passwd='mkgz18//'
 
@@ -38,12 +40,6 @@ ad_server = '10.61.0.102'
 ad_admin = 'Administrator'
 ad_admin_pw = 'mkgz18//'
 
-#日志路径
-unlock_log_path = 'C:\\it\\user_unlock.log'
-pwchange_log_path = 'C:\\it\\user_pwchange.log'
-user_log_path = 'C:\\it\\user_modify.log'
-group_log_path = 'C:\\it\\group_modify.log'
-
 #回调加解密参数
 encode_key = 'ml86JiiQSLu0gK2jX6wImIHCLyf60M4xfkUE9PjpDnh'
 aes_token = 'jtyzJaN6IrU7KiKwjiW34pSJ8'
@@ -51,5 +47,14 @@ aes_token = 'jtyzJaN6IrU7KiKwjiW34pSJ8'
 #base64解码得出用于加解密的aes_key
 aes_key = base64.b64decode(encode_key+'=')
 
-#计划任务传参用全局变量
-job_result = ''
+#日志路径
+log_path = '/var/www/adsupport/logs/adsupport.log'
+
+#日志模块
+adsupport_logger = logging.getLogger('adsupport')
+adsupport_logger.setLevel(logging.INFO)
+adsupport_handler = logging.handlers.RotatingFileHandler(log_path,maxBytes=5000000,backupCount=7)
+adsupport_fmt = logging.Formatter('%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d][%(funcName)s] - %(message)s')
+adsupport_handler.setFormatter(adsupport_fmt)
+adsupport_logger.addHandler(adsupport_handler)
+

@@ -9,18 +9,18 @@ from DingCallbackCrypto import*
 from ADOperate import *
 
 app = Flask(__name__)
+
 #设置异步执行器
 executor = Executor(app)
 
 #通知计划任务结果
 def jobdone(event):
-    job_result = event.retval 
-    print(job_result)
+    job_result = event.retval
+    adsupport_logger.info("job done:"+job_result)
     access_token = get_token(app_key,app_secret)
-    result = sendnotification(access_token,ding_admin_id,job_result) 
-    print(result)
+    sendnotification(access_token,ding_admin_id,job_result) 
 
-#计划任务初始化
+#启动计划任务模块
 scheduler = APScheduler()
 scheduler.api_enabled = True
 scheduler.init_app(app)
@@ -28,10 +28,10 @@ scheduler.add_listener(jobdone,4096)
 scheduler.start()
 
 #异步处理函数
-def ADhandle(msg):
+def ADhandler(msg):
     #状态为finish的审批流才有result字段,审批通过时才执行操作
     if ("result" in msg) and ( msg["result"] == 'agree' ):
-        #默认通知信息,推送消息添加optime,确保每次消息都不一样
+        #推送消息添加optime,确保每次消息都不一样
         optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 
         if ( msg['processCode'] == infra_process_code ) or ( msg['processCode'] == newuser_process_code ) :
@@ -62,6 +62,7 @@ def ADhandle(msg):
                 result = "{0}\n非自动处理审批,请尽快处理\n{1}".format(optime,msg["url"])
                 sendnotification(access_token,ding_admin_id,result)
                 return dingCrypto.getEncryptedMap(callback_text)
+            result = '{0}\n{1}'.format(optime,result)
             comment_process(access_token,process_id,result)
             sendnotification(access_token,userid_list,result)
 
@@ -72,6 +73,7 @@ def status():
 
 @app.route('/callback',methods=['POST'])
 def callback():
+  try :
     #获取签名,解密参数及密文
     signature = request.args.get('signature')
     msg_signature = request.args.get('msg_signature')
@@ -86,19 +88,14 @@ def callback():
     msg = json.loads(plaintext)
     #print(json.dumps(msg,sort_keys=True,indent=4,separators=(',',':')))  
     
-    executor.submit(ADhandle,msg)
+    executor.submit(ADhandler,msg)
 
-    #默认响应消息
-    callback_text = "success"
     #响应事件,通知钉钉已收到推送
+    callback_text = "success"
     return dingCrypto.getEncryptedMap(callback_text)
 
-@app.route('/jobtest',methods=['get'])
-def jobtest():
-        def test():
-            print("测试")
-        scheduler.add_job("test",test,trigger='date',run_date=datetime.datetime.now())
-        return "定时任务 test"
+  except Exception as e:
+    adsupport_logger.error(str(e))
 
 if __name__ == '__main__':
     app.run()
