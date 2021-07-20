@@ -28,9 +28,8 @@ def get_processinfo(access_token,process_id):
         'dept'       : resp["process_instance"]["form_component_values"][3]["value"] ,
         'title'      : resp["process_instance"]["form_component_values"][4]["value"] ,
                }
-    #发生value异常说明此单无需创建账户
+    #发生value异常说明是设备账号申请单且无需创建账户
     except ValueError as valerror:
-        adsupport_logger.info(str(valerror)+":"+process_id)
         return {
                 'flag' : None ,
                 'user_id'    : resp["process_instance"]["originator_userid"],
@@ -38,12 +37,12 @@ def get_processinfo(access_token,process_id):
                 }
     #发生indexerror说明无此下标,即为故障申报单
     except IndexError as indexerror:
-        adsupport_logger.info("此审批为故障申报单:"+process_id)
         return {
                 'user_id'    : resp["process_instance"]["originator_userid"] ,
                 'flag'       : resp["process_instance"]["form_component_values"][0]["value"] ,
                 'ad_account' : resp["process_instance"]["form_component_values"][2]["value"] ,
                 'dept'       : resp["process_instance"]["form_component_values"][3]["value"] , 
+                'task_id'    : resp["process_instance"]["tasks"][0]['taskid'] ,
                 }
     except Exception as e:
         adsupport_logger.error(str(e))
@@ -76,6 +75,21 @@ def comment_process(access_token,process_id,result):
             "text": result ,
             }
     try:
+        resp= req.getResponse(access_token)
+        adsupport_logger.info(resp)
+    except Exception as e:
+        adsupport_logger.error(str(e))
+
+#审批操作
+def execute_process(access_token,process_id,result,task_id):
+    try:
+        req=dingtalk.api.OapiProcessInstanceExecuteRequest("https://oapi.dingtalk.com/topapi/process/instance/execute")
+        req.request={
+        "actioner_userid": ding_admin_id,
+        "process_instance_id": process_id,
+        "result": result,
+        "task_id": task_id,
+        }
         resp= req.getResponse(access_token)
         adsupport_logger.info(resp)
     except Exception as e:

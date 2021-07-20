@@ -9,6 +9,7 @@ def user_unlock(account):
         raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
     cmd = ' Unlock-ADAccount {0} '.format(account)
+    error_code = 1
 
     #解锁账号
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
@@ -16,17 +17,20 @@ def user_unlock(account):
 
     if ( r.status_code == 0 ):
         log = "{0} 账号解锁成功".format(account) 
+        error_code = 0
         #print(log)
     else :
         result=r.std_err.decode().splitlines()[0]
         log = "{0} 账号解锁失败\n{1}".format(account,result)
     adsupport_logger.info(log)
-    return log
+    return { 'log':log,
+             'error_code':error_code }
 
   except Exception as e:
     log = "内部系统错误:{0}".format(str(e))
     adsupport_logger.error(log)
-    return log
+    return { 'log':log,
+             'error_code':error_code }
 
 #重置密码
 def user_resetpw(account):
@@ -37,22 +41,27 @@ def user_resetpw(account):
     #生成powershell命令以及获取当前时间
     cmd = 'Set-ADAccountPassword -Reset {0} -NewPassword (ConvertTo-SecureString -AsPlainText "{1}" -Force) ; \
             Unlock-ADAccount {0} '.format(account,passwd)
+    error_code = 1
+    
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
     r = s.run_ps(cmd)
 
     if ( r.status_code == 0 ) :
 
         log = "{0} 密码已重置为{1}".format(account,passwd) 
+        error_code = 0
     else :
         result = r.std_err.decode().splitlines()[0]
         log = "{0} 重置密码失败\n{1}".format(account,result)
     adsupport_logger.info(log)
-    return log
-
+    return { 'log':log,
+             'error_code':error_code }
   except Exception as e:
     log = "内部系统错误:{0}".format(str(e))
     adsupport_logger.error(log)
-    return log
+    return { 'log':log,
+             'error_code':error_code }
+
 #创建账户
 def user_create(account,dept,title):
   try:
@@ -191,7 +200,11 @@ def group_removemember(account,group):
     return log
 
 #添加Admins组
-def group_addAdmins(account):
+def group_addAdmins(account,scheduler):
+    '''
+    :param string account : ad账号
+    :param scheduler      : flask_scheduler实例
+    '''
     try:
         error_code = 1
         if user_check(account) == "False" :
@@ -204,18 +217,22 @@ def group_addAdmins(account):
         r = s.run_ps(cmd)
         if ( r.status_code == 0 ):
             error_code = 0
-            log = "{0} 权限处理成功\n需30分钟内注销或重启电脑\n超时未重启将导致处理失效".format(account)
+            log = "{0} 权限处理成功\n请等待1分钟后注销或重启电脑\n)".format(account)
+            #添加定时任务回收权限
+            job_id = "removeAdmins:{0}".format(account)
+            start_time=(datetime.datetime.now()+datetime.timedelta(minutes=30))
+            scheduler.add_job(job_id,group_removeAdmins,args=[account],trigger='date',run_date=start_time)
         else :
             result=r.std_err.decode().splitlines()[0]
             log = "{0} 权限处理失败,请联系IT处理\n{1}".format(account,result)
         adsupport_logger.info(log)
-        return {"result" : log,
-                "error_code" : error_code}
+        return { "log" : log,
+                 "error_code" : error_code}
     except Exception as e:
         log = "内部系统错误:{0}".format(str(e))
         adsupport_logger.error(log)
-        return {"result" : log,
-                "error_code" : error_code}
+        return { "log" : log,
+                 "error_code" : error_code}
 
 #移除Admins组
 def group_removeAdmins(account):

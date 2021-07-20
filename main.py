@@ -29,42 +29,64 @@ scheduler.start()
 
 #异步处理函数
 def ADhandler(msg):
+    if ( msg['processCode'] == infra_process_code ) and ( msg["type"] == "start" ):
+        #推送消息添加optime,确保每次消息都不一样
+        optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        
+        process_id = msg['processInstanceId']
+        adsupport_logger.info("IT故障申报单审批id:"+process_id)
+        access_token = get_token(app_key,app_secret)
+        #获取审批实例的发起人信息及待操作的ad账号
+        info = get_processinfo(access_token,process_id)
+        ad_account = info['ad_account']
+        task_id = info['task_id']
+        userid_list = "{0},{1}".format(info['user_id'],ding_admin_id)
+
+        if   info['flag'] == '解锁账号' :
+            re = user_unlock(ad_account)
+        elif info['flag'] == '重置密码' :
+            re = user_resetpw(ad_account)
+        elif info['flag'] == '微信打不开' :
+            re = group_addAdmins(ad_account,scheduler)
+        else :
+            #非自动化审批只通知管理员
+            result = "{0}\n非自动处理审批,请尽快处理\n{1}".format(optime,msg["url"])
+            sendnotification(access_token,ding_admin_id,result)
+            #return用于终止函数执行
+            return 1
+        
+        result = re["log"]
+        if re["error_code"] == 0 :
+            execute_process(access_token,process_id,"agree",task_id)
+        else :
+            execute_process(access_token,process_id,"refuse",task_id)
+
     #状态为finish的审批流才有result字段,审批通过时才执行操作
-    if ("result" in msg) and ( msg["result"] == 'agree' ):
+    elif ("result" in msg) and ( msg["result"] == 'agree' ) and ( msg['processCode'] == newuser_process_code ) :
         #推送消息添加optime,确保每次消息都不一样
         optime = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
 
-        if ( msg['processCode'] == infra_process_code ) or ( msg['processCode'] == newuser_process_code ) :
-            process_id = msg['processInstanceId']
-            print("审批id:"+process_id)
-            access_token = get_token(app_key,app_secret)
-            #获取审批实例的发起人信息及待操作的ad账号
-            info = get_processinfo(access_token,process_id)
-            ad_account = info['ad_account']
-            userid_list = "{0},{1}".format(info['user_id'],ding_admin_id)
-
-            if   info['flag'] == '解锁账号' :
-                result = user_unlock(ad_account)
-            elif info['flag'] == '重置密码' :
-                result = user_resetpw(ad_account)
-            elif info['flag'] == '微信打不开' :
-                re = group_addAdmins(ad_account)
-                result = re["result"]
-                #权限添加成功30分钟后回收权限
-                if re["error_code"] == 0 :
-                    job_id = "removeAdmins:{0}".format(ad_account)
-                    start_time=(datetime.datetime.now()+datetime.timedelta(minutes=30))
-                    scheduler.add_job(job_id,group_removeAdmins,args=[ad_account],trigger='date',run_date=start_time)
-            elif info['flag'] == '新员工账号申请' :
-                result = user_create(ad_account,info['dept'],info['title'])
-            else :
-                #非自动化审批只通知管理员
-                result = "{0}\n非自动处理审批,请尽快处理\n{1}".format(optime,msg["url"])
-                sendnotification(access_token,ding_admin_id,result)
-                return dingCrypto.getEncryptedMap(callback_text)
-            result = '{0}\n{1}'.format(optime,result)
-            comment_process(access_token,process_id,result)
-            sendnotification(access_token,userid_list,result)
+        process_id = msg['processInstanceId']
+        adsupport_logger.info("IT设备申请单审批id:"+process_id)
+        access_token = get_token(app_key,app_secret)
+        #获取审批实例的发起人信息及待操作的ad账号
+        info = get_processinfo(access_token,process_id)
+        userid_list = "{0},{1}".format(info['user_id'],ding_admin_id)
+        
+        if info['flag'] == '新员工账号申请' :
+            result = user_create(info['ad_account'],info['dept'],info['title'])
+        else :
+            #非自动化审批只通知管理员
+            result = "{0}\n非自动处理审批,请尽快处理\n{1}".format(optime,msg["url"])
+            sendnotification(access_token,ding_admin_id,result)
+            #return用于终止函数执行
+            return 1
+    else :
+        return 1
+    
+    result = '{0}\n{1}'.format(optime,result)
+    comment_process(access_token,process_id,result)
+    sendnotification(access_token,userid_list,result)
 
 @app.route('/',methods=['get'])
 def status():
@@ -88,10 +110,10 @@ def callback():
     msg = json.loads(plaintext)
     #print(json.dumps(msg,sort_keys=True,indent=4,separators=(',',':')))  
     
+    callback_text = "success"
     executor.submit(ADhandler,msg)
 
     #响应事件,通知钉钉已收到推送
-    callback_text = "success"
     return dingCrypto.getEncryptedMap(callback_text)
 
   except Exception as e:
