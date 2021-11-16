@@ -54,8 +54,9 @@ def ADhandler(msg):
             sendnotification(access_token,ding_admin_id,result)
             #return用于终止函数执行
             return 1
-        
+        print(re)
         result = re["log"]
+        print(re["error_code"])
         if re["error_code"] == 0 :
             execute_process(access_token,process_id,"agree",task_id)
         else :

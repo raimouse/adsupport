@@ -1,15 +1,16 @@
 # coding=utf-8
 from ini import *
 
+
 #解锁账号
 def user_unlock(account):
   try:
+    error_code = 1
     #先检查用户是否存在(无实际性能提升)
     if user_check(account) == "False" :
         raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
     cmd = ' Unlock-ADAccount {0} '.format(account)
-    error_code = 1
 
     #解锁账号
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
@@ -35,13 +36,13 @@ def user_unlock(account):
 #重置密码
 def user_resetpw(account):
   try:
+    error_code = 1
     #先检查所申请的账号是否已经存在
     if user_check(account) == "False" :
         raise ValueError('未找到该账号,请检查输入')
     #生成powershell命令以及获取当前时间
     cmd = 'Set-ADAccountPassword -Reset {0} -NewPassword (ConvertTo-SecureString -AsPlainText "{1}" -Force) ; \
             Unlock-ADAccount {0} '.format(account,passwd)
-    error_code = 1
     
     s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
     r = s.run_ps(cmd)
@@ -58,9 +59,11 @@ def user_resetpw(account):
              'error_code':error_code }
   except Exception as e:
     log = "内部系统错误:{0}".format(str(e))
+    print(error_code)
     adsupport_logger.error(log)
-    return { 'log':log,
-             'error_code':error_code }
+    return { "log" : log,
+             "error_code" : error_code }
+    print("kl")
 
 #创建账户
 def user_create(account,dept,title):
@@ -217,7 +220,7 @@ def group_addAdmins(account,scheduler):
         r = s.run_ps(cmd)
         if ( r.status_code == 0 ):
             error_code = 0
-            log = "{0} 权限处理成功\n请等待1分钟后注销或重启电脑\n)".format(account)
+            log = "{0} 权限处理成功\n请注销或重启电脑\n权限有效期30分钟\n注:可能需要注销多次".format(account)
             #添加定时任务回收权限
             job_id = "removeAdmins:{0}".format(account)
             start_time=(datetime.datetime.now()+datetime.timedelta(minutes=30))
