@@ -53,6 +53,7 @@ log_path = '/var/www/adsupport/logs/adsupport.log'
 #日志模块
 adsupport_logger = logging.getLogger('adsupport')
 adsupport_logger.setLevel(logging.INFO)
+#日志最大5M一次分割,保留7个文件
 adsupport_handler = logging.handlers.RotatingFileHandler(log_path,maxBytes=5000000,backupCount=7)
 adsupport_fmt = logging.Formatter('%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d][%(funcName)s] - %(message)s')
 adsupport_handler.setFormatter(adsupport_fmt)
