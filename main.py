@@ -48,6 +48,8 @@ def ADhandler(msg):
             re = user_resetpw(ad_account)
         elif info['flag'] == '微信打不开' :
             re = group_addAdmins(ad_account,scheduler)
+        elif info['flag'] == '解锁USB权限' :
+            re = enableusb(ad_account,scheduler)
         else :
             #非自动化审批只通知管理员
             result = "{0}\n非自动处理审批,请尽快处理\n{1}".format(optime,msg["url"])

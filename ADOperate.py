@@ -259,6 +259,61 @@ def group_removeAdmins(account):
         adsupport_logger.error(log)
         return log
 
+#解锁usb权限
+def enableusb(account,scheduler):
+    '''
+    :param string account : ad账号
+    :param scheduler      : flask_scheduler实例
+    '''
+    try:
+        error_code = 1
+        if user_check(account) == "False" :
+            raise ValueError('未找到该账号,请检查输入')
+        #生成powershell命令以及获取当前时间
+        cmd = ' Add-ADGroupMember -Identity "EnableUSB" -Members {0} '.format(account)
+
+        s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
+        r = s.run_ps(cmd)
+        if ( r.status_code == 0 ):
+            error_code = 0
+            log = "{0} 权限处理成功\n请注销或重启电脑\n权限有效期120分钟\n注:可能需要注销多次".format(account)
+            #添加定时任务回收权限
+            job_id = "disableUSB:{0}".format(account)
+            start_time=(datetime.datetime.now()+datetime.timedelta(minutes=120))
+            scheduler.add_job(job_id,disableusb,args=[account],trigger='date',run_date=start_time)
+        else :
+            result=r.std_err.decode().splitlines()[0]
+            log = "{0} 权限处理失败,请联系IT处理\n{1}".format(account,result)
+        adsupport_logger.info(log)
+        return { "log" : log,
+                 "error_code" : error_code}
+    except Exception as e:
+        log = "内部系统错误:{0}".format(str(e))
+        adsupport_logger.error(log)
+        return { "log" : log,
+                 "error_code" : error_code}
+
+#移除USB权限
+def disableusb(account):
+    try:
+        if user_check(account) == "False" :
+            raise ValueError('未找到该账号,请检查输入')
+        cmd = ' Remove-ADGroupMember -Identity "EnableUSB" -Members {0} -Confirm:0 '.format(account)
+        
+        s = winrm.Session(ad_server,auth=(ad_admin,ad_admin_pw))
+        r = s.run_ps(cmd)
+        if ( r.status_code == 0 ):
+            log = "{0} 移除USB权限成功".format(account)
+        else :
+            result=r.std_err.decode().splitlines()[0]
+            log = "{0} 移除USB权限失败\n{1}".format(account,result)
+        adsupport_logger.info(log)
+        return log
+    except Exception as e:
+        log = "内部系统错误:{0}".format(str(e))
+        adsupport_logger.error(log)
+        return log
+
 #构建ou
 def get_ou(dept):
     #部门列表
