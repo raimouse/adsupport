@@ -89,13 +89,14 @@ def user_create(account,dept,title):
       cmd = ' New-ADUser -Name {0} -SamAccountName {0} -DisplayName {0} \
               -EmailAddress "{0}@makrochina.com" -UserPrincipalName "{0}@makrochina.com" \
               -Surname {1} -GivenName {2} \
-              -Department {3} -Office {4} -Title {5} \
+              -Department {3} -Office {4} -Title "{5}" \
               -Company "Makro - China" -Country "CN" \
               -Path "{6},OU=Users,OU=MakroChinaGZ,DC=makrochina,DC=com" \
               -AccountPassword (ConvertTo-SecureString -AsPlainText "{7}" -Force) \
               -PasswordNeverExpires 1 -Enabled 1 ' \
               .format(account,surname,givenname,dept,office,title,OU,passwd)
       group_addmember_result = ""
+      group_addmember_result2 = ""
       passwd_result = ""
 
       #创建账号
@@ -106,12 +107,13 @@ def user_create(account,dept,title):
           log = "{0} 账号创建成功".format(account)
           group = "MKCN {0}".format(dept).strip()
           group_addmember_result = group_addmember(account,group)
+          group_addmember_result2 = group_addmember(account,"MKCN")
           passwd_result = "初始密码 : {0}".format(passwd)
       else :
           result = r.std_err.decode().splitlines()[0]
           log = "{0} 账号创建失败\n{1}".format(account,result)
       adsupport_logger.info(log)
-      return log+"\n"+passwd_result+"\n"+group_addmember_result
+      return log+"\n"+passwd_result+"\n"+group_addmember_result+"\n"+group_addmember_result2
 
   except Exception as e:
     log = "内部系统错误:{0}".format(str(e))
