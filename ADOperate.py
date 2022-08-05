@@ -74,8 +74,8 @@ def user_create(account,dept,title):
       office = dept_info["office"]
       OU = dept_info["OU"]
       #门店员工不会创建AD账号
-      if dept == "ST01" :
-          raise ValueError("门店员工不创建个人邮箱账号\n新建门店邮箱账号请联系IT处理")
+      #if dept == "ST01" :
+      #    raise ValueError("门店员工不创建个人邮箱账号\n新建门店邮箱账号请联系IT处理")
       #检查账号格式是否正确
       if ("." in account) :
           surname = account.split('.')[1].strip()
@@ -107,13 +107,12 @@ def user_create(account,dept,title):
           log = "{0} 账号创建成功".format(account)
           group = "MKCN {0}".format(dept).strip()
           group_addmember_result = group_addmember(account,group)
-          group_addmember_result2 = group_addmember(account,"MKCN")
           passwd_result = "初始密码 : {0}".format(passwd)
       else :
           result = r.std_err.decode().splitlines()[0]
           log = "{0} 账号创建失败\n{1}".format(account,result)
       adsupport_logger.info(log)
-      return log+"\n"+passwd_result+"\n"+group_addmember_result+"\n"+group_addmember_result2
+      return log+"\n"+passwd_result+"\n"+group_addmember_result
 
   except Exception as e:
     log = "内部系统错误:{0}".format(str(e))
@@ -326,7 +325,6 @@ def get_ou(dept):
     dept_mk = ["MKCD","MK（MM）","MK2","MK3（电商）"]
     dept_md = ["MD","BD"]
     dept_op = ["OP","KA"]
-    dept_ST01 = ["1001 花都迎宾店","CD","ALC","水产","冷冻冷藏","果蔬","肉类","收银部","收货","干货","配送","GA"]
 
     office = "HQ"
 
@@ -351,14 +349,13 @@ def get_ou(dept):
     elif dept in dept_op :
         dept = "OP"
         ou = "OU=OPTN,OU=HQ"
-    elif dept in dept_ST01 :
+    #默认ST01
+    else :
+        log="部门为:{0}".format(dept)
+        adsupport_logger.info(log)
         dept = "ST01"
         ou = "OU=ST01"
         office = "ST01"
-    else :
-        #默认OU为HQ,默认部门为IT
-        ou = "OU=HQ"
-        dept = "IT"
 
     return { "OU" : ou , "office" : office , "dept" : dept }
 
